@@ -28,10 +28,8 @@ export async function main(args: string[]) {
     if (!daoResult.isOk) panic(daoResult);
     dao = daoResult.val;
     const services = makeLendingLibrary(dao);
-    if (args.length > 1) {
-      const loadResult = await loadData(services, args.slice(1));
-      if (!loadResult.isOk) panic(loadResult);
-    }
+    const paths: string[] = [];
+    const loadResult = await loadData(services, paths);
     const {app, close: closeApp} = serve(services, config.ws);
     const serverOpts = {
       key: fs.readFileSync(config.https.keyPath),
@@ -59,15 +57,14 @@ export async function main(args: string[]) {
 async function loadData(services: LendingLibrary, jsonPaths: string[]) {
   const clearResult = await services.clear();
   if (!clearResult.isOk) return clearResult;
-  for (const jsonPath of jsonPaths) {
-    const readResult: Errors.Result<any> = await readJson(jsonPath);
-    if (!readResult.isOk) return readResult;
-    const data = readResult.val;
-    const books = Array.isArray(data) ? data : [ data ];
-    for (const book  of books) {
-      const addResult = await services.addBook(book);
-      if (!addResult.isOk) return addResult;
-    }
+  const dataPath = Path.resolve('../backend/data/books.json');
+  const booksData = fs.readFileSync(dataPath, 'utf8');
+  const readResult = JSON.parse(booksData);
+  const data = readResult;
+  const books = Array.isArray(data) ? data : [ data ];
+  for (const book  of books) {
+    const addResult = await services.addBook(book);
+    if (!addResult.isOk) return addResult;
   }
   return Errors.VOID_RESULT;
 }

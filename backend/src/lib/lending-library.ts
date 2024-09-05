@@ -78,6 +78,24 @@ export class LendingLibrary {
     return Errors.okResult(book);
   }
 
+  async getBook(isbn: string): Promise<Errors.Result<Lib.XBook>> {
+    // Validate ISBN format or any other checks
+    if (!isbn || typeof isbn !== 'string') {
+      return Errors.errResult('Invalid ISBN format', { code: 'BAD_REQ' });
+    }
+  
+    // Fetch the book from the database using the DAO
+    const result = await this.dao.getByISBN(isbn);
+  
+    if (result.isOk) {
+      // Book found, return the book
+      return Errors.okResult(result.val);
+    } else {
+      // Book not found, return an error
+      return Errors.errResult(`Book with ISBN ${isbn} not found`, { code: 'NOT_FOUND' });
+    }
+  }
+
   /** Return all books whose authors and title fields contain all
    *  "words" in req.search, where a "word" is a max sequence of /\w/
    *  of length > 1.  Note that word matching must be case-insensitive,
@@ -145,6 +163,10 @@ export class LendingLibrary {
     await this.dao.checkout(lend);
     await this.dao.update(req.isbn, -1);
     return Errors.VOID_RESULT;
+  }
+
+  async findLendings(req: Record<string, any>): Promise<Errors.Result<Lib.Lend[]>> {
+      return await this.dao.getLendings(req.isbn);
   }
 
   /** Set up patron req.patronId to returns book req.isbn.

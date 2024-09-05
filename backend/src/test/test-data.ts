@@ -1,4 +1,6 @@
 import Path from 'path';
+import fs from 'fs';
+
 
 import { Errors } from 'utils';
 import { readJson } from 'node-utils';
@@ -11,8 +13,9 @@ export { BOOKS, };
 //bit messy, but don't want to copy data;
 //also, import json requires experimental import assertions
 async function getTestBooks() {
-  const dataPath = Path.join(process.env.HOME, '/data/books.json');
-  const readResult = await readJson(dataPath);
-  if (readResult.isOk === false) throw readResult.errors;
-  return readResult.val as Record<string, any>[];
+  const dataPath = Path.resolve('../backend/data/books.json');
+  console.log(dataPath);
+  const booksData = fs.readFileSync(dataPath, 'utf8');
+  const readResult = JSON.parse(booksData);
+  return readResult as Record<string, any>[];
 }

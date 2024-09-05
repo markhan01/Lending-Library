@@ -145,6 +145,18 @@ export class LibraryDao {
     }
   }
 
+  async getLendings(isbn: string): Promise<Errors.Result<Lib.Lend[]>> {
+    try {
+      const collection = this.bookCheckouts;
+      // Find all records with the given ISBN
+      const lendings = await collection.find({ isbn }).toArray();
+      return Errors.okResult(lendings);
+    } catch (err) {
+      // Handle any errors that occur during the database operation
+      return Errors.errResult((err as Error).message, 'DB');
+    }
+  }
+
 
   async checkout(lend: Lend): Promise<Errors.Result<Lib.Lend>> {
     try {
